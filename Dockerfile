@@ -1,19 +1,9 @@
-# Stage 1 — Build the .NET app
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/core/sdk:2.1 AS build
 WORKDIR /app
-
-# Copy everything into container
 COPY . .
-
-# Publish the app
 RUN dotnet publish -c Release -o out
 
-# Stage 2 — Runtime container
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
+FROM mcr.microsoft.com/dotnet/core/runtime:2.1 AS runtime
 WORKDIR /app
-
-# Copy published output
 COPY --from=build /app/out .
-
-# Run the app
-ENTRYPOINT ["dotnet", "dotnet-hello-world.dll"]
+ENTRYPOINT ["dotnet", "hello-world-api.dll"]
