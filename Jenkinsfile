@@ -6,37 +6,34 @@ pipeline {
     }
 
     environment {
+        DOCKERHUB_USER = credentials('dockerhub-user')
+        DOCKERHUB_PASS = credentials('dockerhub-pass')
 
-        // DockerHub credentials
-        DOCKER_CREDS = credentials('dockerhub-creds')
-
-        // AWS credentials
-        AWS_CREDS = credentials('aws-creds')
-
-        IMAGE_NAME = "rups1/dotnetapp"
-        TAG = "v1"
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-key')
 
         UAT_HOST = "ec2-user@UAT_PUBLIC_IP"
         PROD_HOST = "ec2-user@PROD_PUBLIC_IP"
+        IMAGE_NAME = "rups1/dotnetapp"
+        TAG = "v1"
     }
 
     stages {
-
         stage('Clone Repo') {
             steps {
                 git 'https://github.com/RupsShelar/dotnet-hello-world.git'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Image') {
             steps {
                 sh "docker build -t ${IMAGE_NAME}:${TAG} ."
             }
         }
 
-        stage('Login to DockerHub') {
+        stage('Docker Login') {
             steps {
-                sh "echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin"
+                sh "echo ${DOCKERHUB_PASS} | docker login -u ${DOCKERHUB_USER} --password-stdin"
             }
         }
 
@@ -46,18 +43,18 @@ pipeline {
             }
         }
 
-        stage('Deploy to EC2') {
+        stage('Deploy') {
             steps {
                 script {
-                    def HOST = (params.ENV == 'UAT') ? UAT_HOST : PROD_HOST
+                    HOST = (params.ENV == 'UAT') ? UAT_HOST : PROD_HOST
 
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${HOST} '
-                            docker pull ${IMAGE_NAME}:${TAG} &&
-                            docker stop app || true &&
-                            docker rm app || true &&
-                            docker run -d --name app -p 5000:80 ${IMAGE_NAME}:${TAG}
-                        '
+                    ssh -o StrictHostKeyChecking=no ${HOST} '
+                        docker pull ${IMAGE_NAME}:${TAG} &&
+                        docker stop dotnetapp || true &&
+                        docker rm dotnetapp || true &&
+                        docker run -d --name dotnetapp -p 5000:80 ${IMAGE_NAME}:${TAG}
+                    '
                     """
                 }
             }
