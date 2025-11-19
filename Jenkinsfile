@@ -12,13 +12,15 @@ pipeline {
         AWS_ACCESS_KEY_ID = credentials('aws-access-key')
         AWS_SECRET_ACCESS_KEY = credentials('aws-secret-key')
 
-        UAT_HOST = "ec2-user@UAT_PUBLIC_IP"
-        PROD_HOST = "ec2-user@PROD_PUBLIC_IP"
+        UAT_HOST = "ec2-user@3.111.214.120"
+        PROD_HOST = "ec2-user@13.232.112.45"
+
         IMAGE_NAME = "rups1/dotnetapp"
         TAG = "v1"
     }
 
     stages {
+
         stage('Clone Repo') {
             steps {
                 git 'https://github.com/RupsShelar/dotnet-hello-world.git'
@@ -33,7 +35,7 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                sh "echo ${DOCKERHUB_PASS} | docker login -u ${DOCKERHUB_USER} --password-stdin"
+                sh "echo ${DOCKERHUB_PASS_PSW} | docker login -u ${DOCKERHUB_USER_USR} --password-stdin"
             }
         }
 
